@@ -36,7 +36,7 @@ class BatchModal:  # MARK: BatchModal
     _overlay_space_type = None
     _overlay_draw_handler = None
 
-    def collection_names(self, context, edit_text):  # (Optional) Use for the 'search' parameter in StringProperty
+    def collection_names(self, context, edit_text):  # (Example) Callback for the 'search' parameter in StringProperty
         collections = bpy.data.collections
         return [c.name for c in collections]
 
