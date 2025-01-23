@@ -2,6 +2,7 @@ import bpy
 import gpu
 from gpu_extras.batch import batch_for_shader
 import blf
+import time
 
 
 # ——————————————————————————————————————————————————————————————————————
@@ -10,7 +11,7 @@ import blf
 
 
 class BatchModal:  # MARK: BatchModal
-    """A helper class for batch operations with loading bar, image preview and status message"""
+    """A helper class for batch operations with a loading bar, image preview, status message and estimated time"""
 
     data_to_empty = []
     interval_seconds = 1.0
@@ -27,21 +28,26 @@ class BatchModal:  # MARK: BatchModal
 
     use_props_dialog = False
 
-    # NOTE: These should not have to be touched
+    # NOTE: Behind the scenes, read-only
     _timer = None
-    _start_count = 0
+    _total_items = 0
     _progress = 0.0
+    _start_time = 0.0
+    _estimated_time = 0.0
 
+    _invoked_from_ui = False
     _overlay_area = None
     _overlay_space_type = None
     _overlay_draw_handler = None
 
-    def collection_names(self, context, edit_text):  # (Example) Callback for the 'search' parameter in StringProperty
+    # (Example) Callback function for the 'search' parameter for StringProperty
+    def collection_names(self, context, edit_text):
         collections = bpy.data.collections
         return [c.name for c in collections]
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
         wm = context.window_manager
+        self._invoked_from_ui = True
         self._overlay_area = next(a for a in context.screen.areas if a.type == self.overlay_area_type)
 
         if self.use_props_dialog:
@@ -65,12 +71,18 @@ class BatchModal:  # MARK: BatchModal
         self.warmup(context)
 
         self.data_to_empty = self.data_to_empty[:]
-        self._start_count = len(self.data_to_empty)
+        self._total_items = len(self.data_to_empty)
 
-        self._overlay_space_type = type(self._overlay_area.spaces[0])
-        self._draw_handler = self._overlay_space_type.draw_handler_add(self.draw_overlay, (), "WINDOW", "POST_PIXEL")
+        if self._invoked_from_ui:
+            self._overlay_space_type = type(self._overlay_area.spaces[0])
+            self._overlay_draw_handler = self._overlay_space_type.draw_handler_add(
+                self.draw_overlay, (), "WINDOW", "POST_PIXEL"
+            )
+
         self._timer = wm.event_timer_add(self.interval_seconds, window=context.window)
         wm.modal_handler_add(self)
+
+        self._start_time = time.time()
         return {"RUNNING_MODAL"}
 
     def main_process(self, context: bpy.types.Context, datablock) -> None:
@@ -88,29 +100,44 @@ class BatchModal:  # MARK: BatchModal
         ...
         return None
 
+    def cancel(self, context: bpy.types.Context):  # This is nothing but an added safeguard, don't override this
+        if self._overlay_draw_handler is not None:
+            self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
+
     def modal(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:  # MARK: Modal
         wm = context.window_manager
         if event.type == "TIMER":
             self.main_process(context, self.data_to_empty[0])
             self.data_to_empty.pop(0)
-            self._progress = 1.0 - len(self.data_to_empty) / self._start_count
+            processed_items = self._total_items - len(self.data_to_empty)
+
+            self._progress = processed_items / self._total_items
+
+            # Time estimation
+            elapsed_time = time.time() - self._start_time
+            average_time_per_item = elapsed_time / processed_items
+            self._estimated_time = average_time_per_item * (self._total_items - processed_items)
+
             self._overlay_area.tag_redraw()
 
             if len(self.data_to_empty) < 1:
                 self.cleanup(context)
-                self._overlay_space_type.draw_handler_remove(self._draw_handler, "WINDOW")
+                if self._overlay_draw_handler is not None:
+                    self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
                 wm.event_timer_remove(self._timer)
                 return {"FINISHED"}
 
         if event.type == "RET":
             self.cleanup(context)
-            self._overlay_space_type.draw_handler_remove(self._draw_handler, "WINDOW")
+            if self._overlay_draw_handler is not None:
+                self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
             wm.event_timer_remove(self._timer)
             return {"FINISHED"}
 
         if event.type == "ESC":
             self.undo_everything(context)
-            self._overlay_space_type.draw_handler_remove(self._draw_handler, "WINDOW")
+            if self._overlay_draw_handler is not None:
+                self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
             wm.event_timer_remove(self._timer)
             return {"CANCELLED"}
         return {"RUNNING_MODAL"}
