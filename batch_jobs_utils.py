@@ -74,7 +74,7 @@ class BatchModal:  # MARK: BatchModal
         return {"RUNNING_MODAL"}
 
     def main_process(self, context: bpy.types.Context, datablock) -> None:
-        """Processes the first datablock in the list until the list has been emptied."""
+        """Processes the first datablock in the list until the list is empty."""
         ...
         return None
 
@@ -84,7 +84,7 @@ class BatchModal:  # MARK: BatchModal
         return None
 
     def cleanup(self, context: bpy.types.Context) -> None:
-        """Performs any finalising steps of the batch operation."""
+        """Performs any finalising steps to complete the batch operation."""
         ...
         return None
 
