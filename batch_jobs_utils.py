@@ -79,7 +79,7 @@ class BatchModal:  # MARK: BatchModal
         return None
 
     def undo_everything(self, context: bpy.types.Context) -> None:
-        """Performs every necessary undo step to reset everything to its original state."""
+        """Performs every necessary undo step to reset everything back to its original state."""
         ...
         return None
 
