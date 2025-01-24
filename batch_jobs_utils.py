@@ -101,6 +101,7 @@ class BatchModal:  # MARK: BatchModal
         return None
 
     def cancel(self, context: bpy.types.Context):  # This is nothing but an added safeguard, don't override this
+        """No overriding"""
         if self._overlay_draw_handler is not None:
             self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
 
@@ -169,9 +170,15 @@ class BatchModal:  # MARK: BatchModal
             blf.position(font_id, 20, 30, 0)
             blf.draw(font_id, f"{self.key_instructions}: {self.bl_idname}: {self.progress_message}")
 
+            m, s = divmod(self._estimated_time, 60)
+            h, m = divmod(m, 60)
+
             blf.size(font_id, 20.0)
             blf.position(font_id, 20, 50, 0)
-            blf.draw(font_id, f"{int(self._progress * 100)}%")
+            blf.draw(
+                font_id,
+                f"{int(self._progress * 100)}% Estimated time: {int(h)}h:{int(m):02d}m:{int(s):02d}s",
+            )
 
         # Text
         if self.image is not None:
