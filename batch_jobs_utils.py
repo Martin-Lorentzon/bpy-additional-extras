@@ -177,7 +177,7 @@ class BatchModal:  # MARK: BatchModal
             blf.position(font_id, 20, 50, 0)
             blf.draw(
                 font_id,
-                f"{int(self._progress * 100)}% Estimated time: {int(h)}h:{int(m):02d}m:{int(s):02d}s",
+                f"{int(self._progress * 100)}% Estimated time left: {int(h)}h:{int(m):02d}m:{int(s):02d}s",
             )
 
         # Text
