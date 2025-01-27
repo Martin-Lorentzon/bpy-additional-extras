@@ -11,7 +11,9 @@ import time
 
 
 class BatchModal:  # MARK: BatchModal
-    """A helper class for batch operations with a loading bar, image preview, status message and estimated time"""
+    """
+    A helper class for batch operations with a loading bar, image preview, status message and estimated time.
+    """
 
     data_to_empty = []
     interval_seconds = 1.0
@@ -55,7 +57,9 @@ class BatchModal:  # MARK: BatchModal
         return self.execute(context)
 
     def warmup(self, context: bpy.types.Context) -> None:
-        """Initialises the necessary environment or resources to perform the batch operation."""
+        """
+        Initialises the necessary environment or resources to perform the batch operation.
+        """
         self.progress_message = "Warming up"
 
         # self.data_to_empty = <list of data>
@@ -86,22 +90,30 @@ class BatchModal:  # MARK: BatchModal
         return {"RUNNING_MODAL"}
 
     def main_process(self, context: bpy.types.Context, datablock) -> None:
-        """Processes the first datablock in the list until the list is empty."""
+        """
+        Processes the first datablock in the list until the list is empty.
+        """
         ...
         return None
 
     def undo_everything(self, context: bpy.types.Context) -> None:
-        """Performs every necessary undo step to reset everything back to its original state."""
+        """
+        Performs every necessary undo step to reset everything back to its original state.
+        """
         ...
         return None
 
     def cleanup(self, context: bpy.types.Context) -> None:
-        """Performs any finalising steps to complete the batch operation."""
+        """
+        Performs any finalising steps to complete the batch operation.
+        """
         ...
         return None
 
     def cancel(self, context: bpy.types.Context):  # This is nothing but an added safeguard, don't override this
-        """No overriding"""
+        """
+        No overriding
+        """
         if self._overlay_draw_handler is not None:
             self._overlay_space_type.draw_handler_remove(self._overlay_draw_handler, "WINDOW")
 
