@@ -10,6 +10,7 @@ import time
 # ——————————————————————————————————————————————————————————————————————
 
 
+# region BatchModal
 class BatchModal:  # MARK: BatchModal
     """
     A helper class for batch operations with a loading bar, image preview, status message and estimated time.
@@ -37,7 +38,6 @@ class BatchModal:  # MARK: BatchModal
     _start_time = 0.0
     _estimated_time = 0.0
 
-    _invoked_from_ui = False
     _overlay_area = None
     _overlay_space_type = None
     _overlay_draw_handler = None
@@ -49,8 +49,7 @@ class BatchModal:  # MARK: BatchModal
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
         wm = context.window_manager
-        self._invoked_from_ui = True
-        self._overlay_area = next(a for a in context.screen.areas if a.type == self.overlay_area_type)
+        self._overlay_area = next([a for a in context.screen.areas if a.type == self.overlay_area_type], None)
 
         if self.use_props_dialog:
             return wm.invoke_props_dialog(self)
@@ -77,7 +76,7 @@ class BatchModal:  # MARK: BatchModal
         self.data_to_empty = self.data_to_empty[:]
         self._total_items = len(self.data_to_empty)
 
-        if self._invoked_from_ui:
+        if self._overlay_area is not None:
             self._overlay_space_type = type(self._overlay_area.spaces[0])
             self._overlay_draw_handler = self._overlay_space_type.draw_handler_add(
                 self.draw_overlay, (), "WINDOW", "POST_PIXEL"
@@ -131,7 +130,8 @@ class BatchModal:  # MARK: BatchModal
             average_time_per_item = elapsed_time / processed_items
             self._estimated_time = average_time_per_item * (self._total_items - processed_items)
 
-            self._overlay_area.tag_redraw()
+            if self._overlay_draw_handler is not None:
+                self._overlay_area.tag_redraw()
 
             if len(self.data_to_empty) < 1:
                 self.cleanup(context)
@@ -210,3 +210,4 @@ class BatchModal:  # MARK: BatchModal
 
             batch.draw(shader)
         return None
+# endregion
