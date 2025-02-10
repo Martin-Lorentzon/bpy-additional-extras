@@ -49,7 +49,7 @@ class BatchModal:  # MARK: BatchModal
 
     def invoke(self, context: bpy.types.Context, event: bpy.types.Event) -> set[str]:
         wm = context.window_manager
-        self._overlay_area = next([a for a in context.screen.areas if a.type == self.overlay_area_type], None)
+        self._overlay_area = next((a for a in context.screen.areas if a.type == self.overlay_area_type), None)
 
         if self.use_props_dialog:
             return wm.invoke_props_dialog(self)
